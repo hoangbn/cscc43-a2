@@ -14,20 +14,42 @@ public class Assignment2 {
     // Prepared Statement
     PreparedStatement ps;
   
-    // Resultset for the query
+    // ResultSet for the query
     ResultSet rs;
   
     //CONSTRUCTOR
-    Assignment2() {}
-  
-    //Using the input parameters, establish a connection to be used for this session. Returns true if connection is sucessful
-    public boolean connectDB(String URL, String username, String password) {
-        return false;
+    Assignment2() {
+        try {
+            Class.forName("org.postgresql.Driver");
+        }
+        catch (ClassNotFoundException e) {
+            System.out.println("Failed to find the JDBC driver");
+        }
     }
   
-    //Closes the connection. Returns true if closure was sucessful
+    /*
+     * Using the input parameters, establish a connection to be used for this session.
+     * Returns true if connection is successful
+     */
+    public boolean connectDB(String URL, String username, String password) {
+        boolean result = true;
+        try {
+            connection = DriverManager.getConnection(URL, username, password);
+        } catch (SQLException e) {
+            result = false;
+        }
+        return result;
+    }
+  
+    // Closes the connection. Returns true if closure was successful
     public boolean disconnectDB() {
-        return false;    
+        boolean result = true;
+        try {
+            connection.close();
+        } catch (SQLException e) {
+            return false;
+        }
+        return result;
     }
     
     public boolean insertPlayer(int pid, String pname, int globalRank, int cid) {
