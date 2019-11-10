@@ -83,8 +83,9 @@ public class Assignment2 {
             ps = connection.prepareStatement("SELECT count(*) FROM champion WHERE pid = ?");
             ps.setInt(1, pid);
             rs = ps.executeQuery();
-            rs.next();
-            result = rs.getInt("count");
+            if (rs.next()) {
+                result = rs.getInt("count");
+            }
             rs.close();
             ps.close();
         } catch (SQLException e) {
@@ -120,7 +121,7 @@ public class Assignment2 {
             ps.setInt(2, losses);
             ps.setInt(3, pid);
             ps.setInt(4, year);
-            if (ps.executeUpdate() != 0) {
+            if (ps.executeUpdate() != 0) { // not sure if this check is supposed to be here
                 result = true;
             }
             ps.close();
@@ -139,7 +140,7 @@ public class Assignment2 {
             ps.setInt(2, p2id);
             ps.setInt(3, p2id);
             ps.setInt(4, p1id);
-            if (ps.executeUpdate() != 0) { // since we can assume events exist btw 2 players
+            if (ps.executeUpdate() != 0) { // also not sure if this needs to be included
                 result = true;
             }
             ps.close();
@@ -150,14 +151,56 @@ public class Assignment2 {
     }
 
     public String listPlayerRanking() {
-	      return "";
+        String result = "";
+        try {
+            rs = sql.executeQuery("SELECT pname, globalrank FROM player ORDER BY globalrank DESC");
+            while (rs.next()) {
+                if (!result.equals("")) {
+                    result += "\n";
+                }
+                result += rs.getString(1) + ":" + rs.getString(2);
+            }
+            rs.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return result;
     }
   
     public int findTriCircle() {
-        return 0;
+        int result = 0;
+        try {
+            String allTriCicleQueryWithOrder = "SELECT DISTINCT e1.winid, e2.winid, e3.winid " +
+                    "FROM event e1, event e2, event e3 " +
+                    "WHERE e1.winid = e3.lossid AND e1.lossid = e2.winid AND e2.lossid = e3.winid";
+            rs = sql.executeQuery("SELECT count(*)/3 FROM (" + allTriCicleQueryWithOrder + ") tri");
+            if (rs.next()) {
+                result = rs.getInt(1);
+            }
+            rs.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return result;
     }
     
-    public boolean updateDB(){
-	      return false;    
+    public boolean updateDB() {
+        boolean result = false;
+        try {
+            sql.executeUpdate("DROP TABLE IF EXISTS championPlayers");
+            sql.executeUpdate("CREATE TABLE championPlayers" +
+                    "(pid INTEGER, pname VARCHAR, nchampions INTEGER)");
+            sql.executeUpdate("INSERT INTO championPlayers " +
+                    "(SELECT p.pid, pname, count(tid)" +
+                    "FROM player p LEFT JOIN champion c " +
+                    "ON p.pid = c.pid " +
+                    "GROUP BY p.pid, pname " +
+                    "ORDER BY p.pid)");
+            result = true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return result;
     }
+
 }

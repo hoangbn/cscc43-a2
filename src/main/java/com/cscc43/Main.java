@@ -13,8 +13,11 @@ public class Main {
 //        assert controller.insertPlayer(1, "Jeff", 1, 2) : "Inserted duplicate";
         System.out.println(controller.getChampions(1));
         System.out.println(controller.getCourtInfo(15));
-        System.out.println(controller.chgRecord(222, 2012, 34, 9));
-        System.out.println(controller.deleteMatchBetween(2, 3));
+        System.out.println(controller.chgRecord(1, 2012, 34, 9));
+//        System.out.println(controller.deleteMatchBetween(2, 3));
+        System.out.println(controller.listPlayerRanking());
+        System.out.println(controller.findTriCircle());
+        System.out.println(controller.updateDB());
         assert controller.disconnectDB() : "Disconnect failed";
 
     }
