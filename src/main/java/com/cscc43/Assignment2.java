@@ -1,5 +1,7 @@
-// REMOVE PACKAGE IN THE END
+// REMOVE PACKAGE AND SUBMIT IN THE END
 package com.cscc43;
+import org.postgresql.util.PSQLException;
+
 import java.sql.*;
 
 public class Assignment2 {
@@ -8,21 +10,23 @@ public class Assignment2 {
     Connection connection;
   
     // Statement to run queries
-    Statement sql;
+    Statement sql = null;
   
     // Prepared Statement
-    PreparedStatement ps;
+    PreparedStatement ps = null;
   
     // ResultSet for the query
     ResultSet rs;
-  
+
+    // insert player query
+    private static final String INSERT_PLAYER = "INSERT INTO player VALUES (?, ?, ?, ?)";
     //CONSTRUCTOR
     Assignment2() {
         try {
             Class.forName("org.postgresql.Driver");
         }
         catch (ClassNotFoundException e) {
-            System.out.println("Failed to find the JDBC driver");
+            e.printStackTrace();
         }
     }
   
@@ -31,49 +35,120 @@ public class Assignment2 {
      * Returns true if connection is successful
      */
     public boolean connectDB(String URL, String username, String password) {
-        boolean result = true;
+        boolean result = false;
         try {
             connection = DriverManager.getConnection(URL, username, password);
+            sql = connection.createStatement();
+            sql.execute("SET search_path TO A2");
+            result = true;
         } catch (SQLException e) {
             e.printStackTrace();
-            result = false;
         }
         return result;
     }
   
     // Closes the connection. Returns true if closure was successful
     public boolean disconnectDB() {
-        boolean result = true;
+        boolean result = false;
         try {
+            sql.close();
             connection.close();
+            result = true;
         } catch (SQLException e) {
-            result = false;
+            e.printStackTrace();
         }
         return result;
     }
     
     public boolean insertPlayer(int pid, String pname, int globalRank, int cid) {
         boolean result = false;
-        
+        try {
+            ps = connection.prepareStatement("INSERT INTO player VALUES (?, ?, ?, ?)");
+            ps.setInt(1, pid);
+            ps.setString(2, pname);
+            ps.setInt(3, globalRank);
+            ps.setInt(4, cid);
+            ps.executeUpdate();
+            result = true;
+            ps.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         return result;
     }
   
     public int getChampions(int pid) {
-	      return 0;  
+        int result = 0;
+        try {
+            ps = connection.prepareStatement("SELECT count(*) FROM champion WHERE pid = ?");
+            ps.setInt(1, pid);
+            rs = ps.executeQuery();
+            rs.next();
+            result = rs.getInt("count");
+            rs.close();
+            ps.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return result;
     }
    
     public String getCourtInfo(int courtid) {
-        return "";
+        String result = "";
+        try {
+            ps = connection.prepareStatement("SELECT * FROM court WHERE courtid = ?");
+            ps.setInt(1, courtid);
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                result += courtid + ":" + rs.getString(2) + ":"
+                        + rs.getString(3) + ":" + rs.getString(4);
+            }
+            rs.close();
+            ps.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return result;
     }
 
     public boolean chgRecord(int pid, int year, int wins, int losses) {
-        return false;
+        boolean result = false;
+        try {
+            ps = connection.prepareStatement("UPDATE record SET wins = ?, losses = ? " +
+                    "WHERE pid = ? AND year = ?");
+            ps.setInt(1, wins);
+            ps.setInt(2, losses);
+            ps.setInt(3, pid);
+            ps.setInt(4, year);
+            if (ps.executeUpdate() != 0) {
+                result = true;
+            }
+            ps.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return result;
     }
 
-    public boolean deleteMatcBetween(int p1id, int p2id) {
-        return false;        
+    public boolean deleteMatchBetween(int p1id, int p2id) {
+        boolean result = false;
+        try {
+            ps = connection.prepareStatement("DELETE FROM event WHERE winid = ? AND lossid = ?" +
+                    "OR winid = ? AND lossid = ?");
+            ps.setInt(1, p1id);
+            ps.setInt(2, p2id);
+            ps.setInt(3, p2id);
+            ps.setInt(4, p1id);
+            if (ps.executeUpdate() != 0) { // since we can assume events exist btw 2 players
+                result = true;
+            }
+            ps.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return result;
     }
-  
+
     public String listPlayerRanking() {
 	      return "";
     }
@@ -85,8 +160,4 @@ public class Assignment2 {
     public boolean updateDB(){
 	      return false;    
     }
-    
-    public static void main(String[] args) {
-      System.out.println("Started");
-  }
 }
