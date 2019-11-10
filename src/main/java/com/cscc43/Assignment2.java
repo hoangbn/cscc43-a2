@@ -1,6 +1,5 @@
 // REMOVE PACKAGE IN THE END
 package com.cscc43;
-
 import java.sql.*;
 
 public class Assignment2 {
@@ -36,6 +35,7 @@ public class Assignment2 {
         try {
             connection = DriverManager.getConnection(URL, username, password);
         } catch (SQLException e) {
+            e.printStackTrace();
             result = false;
         }
         return result;
@@ -47,13 +47,15 @@ public class Assignment2 {
         try {
             connection.close();
         } catch (SQLException e) {
-            return false;
+            result = false;
         }
         return result;
     }
     
     public boolean insertPlayer(int pid, String pname, int globalRank, int cid) {
-        return false;
+        boolean result = false;
+        
+        return result;
     }
   
     public int getChampions(int pid) {
