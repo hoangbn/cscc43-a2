@@ -21,13 +21,8 @@ public class Assignment2 {
     // insert player query
     private static final String INSERT_PLAYER = "INSERT INTO player VALUES (?, ?, ?, ?)";
     //CONSTRUCTOR
-    Assignment2() {
-        try {
-            Class.forName("org.postgresql.Driver");
-        }
-        catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
+    Assignment2() throws ClassNotFoundException {
+        Class.forName("org.postgresql.Driver");
     }
   
     /*
