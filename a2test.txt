@@ -1,0 +1,3 @@
+\i /mnt/c/Users/minhh/Documents/documents/UTSC/3rd_year/cscc43/a2-cscc43/a2.ddl
+\i /mnt/c/Users/minhh/Documents/documents/UTSC/3rd_year/cscc43/a2-cscc43/a2insert.sql
+\i /mnt/c/Users/minhh/Documents/documents/UTSC/3rd_year/cscc43/a2-cscc43/a2.sql

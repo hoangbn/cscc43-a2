@@ -7,7 +7,7 @@ SET search_path TO A2;
 --Query 1
 --Find pname and tname of all champions where players country is same as tournamement country
 CREATE VIEW PlayerTournament AS 
-SELECT pname, tname, p.cid 
+SELECT DISTINCT p.pid, t.tid, pname, tname, p.cid 
 FROM tournament t, player p, champion c
 WHERE p.pid = c.pid AND t.tid = c.tid AND p.cid = t.cid;
 
@@ -26,13 +26,11 @@ SELECT tid, sum(capacity) AS totalCapacity
 FROM court 
 GROUP BY tid;
 
---Fidn the tournaments with the most capacity, report multiple if more than 1
+--Find the tournaments with the most capacity, report multiple if more than 1
 CREATE VIEW MaxCapacity AS 
 SELECT tid, totalCapacity 
-FROM TotalCapacity t1 
-WHERE NOT EXISTS 
-	(SELECT * FROM TotalCapacity t2 
-	WHERE t1.tid <> t2.tid AND t1.totalCapacity < t2.totalCapacity);
+FROM TotalCapacity 
+WHERE totalCapacity = (SELECT max(totalCapacity) FROM TotalCapacity);
 
 INSERT INTO query2
 (SELECT tname, totalCapacity 
@@ -49,44 +47,22 @@ CREATE VIEW eachother AS
 UNION 
 (SELECT lossid as p1id, winid as p2id FROM event);
 
---Find all the oppoents of a player and find its global ranking
-CREATE VIEW opponentglobalrank AS 
-SELECT p1id, p2id, globalrank 
+--Find all highest ranking each player met (highest rank = lowest rank number)
+CREATE VIEW highrankopponent AS 
+SELECT p1id, min(globalrank) as highestrank
 FROM eachother e, player p 
-WHERE e.p2id = p.pid;
+WHERE e.p2id = p.pid
+GROUP BY p1id;
 
 --Find the highest ranking opponent for each player he/she has faced against
-CREATE VIEW highrankopponent AS
-SELECT p1id, p2id, globalrank 
-FROM opponentglobalrank o1 
-WHERE NOT EXISTS
-	(SELECT * FROM opponentglobalrank o2 
-	WHERE o1.p1id = o2.p1id 
-	AND o1.globalrank > o2.globalrank);
 
 INSERT INTO query3
-(SELECT p1id, p1.pname AS p1name, p2id, p2.pname AS p2name
+(SELECT p1id, p1.pname AS p1name, p2.pid, p2.pname AS p2name
 FROM player p1, player p2, highrankopponent
-WHERE p1id = p1.pid AND p2id = p2.pid
-ORDER BY p1name);
+WHERE p1id = p1.pid AND p2.globalrank = highestrank
+ORDER BY p1.pname);
 
-DROP VIEW IF EXISTS eachother, opponentglobalrank, highrankopponent;
-
---Find the player with highest global ranking
-CREATE VIEW highrankopponent AS
-SELECT p1id, p2id, globalrank 
-FROM opponentglobalrank o1 
-WHERE NOT EXISTS
-	(SELECT * FROM opponentglobalrank o2 
-	WHERE o1.p1id = o2.p1id AND o1.globalrank > o2.globalrank);
-
-INSERT INTO query3
-(SELECT p1id, p1.pname AS p1name, p2id, p2.pname AS p2name
-FROM player p1, player p2, highrankopponent
-WHERE p1id = p1.pid AND p2id = p2.pid
-ORDER BY p1name);
-
-DROP VIEW IF EXISTS opponentglobalrank, highrankopponent;
+DROP VIEW IF EXISTS eachother, highrankopponent;
 
 --Query 4
 --Find the number of distinct tournament a player has been a champion of
@@ -97,7 +73,7 @@ GROUP BY pid;
 
 --Count the number of tournaments
 CREATE VIEW NumTournaments AS 
-SELECT count(distinct tid) AS tournaments 
+SELECT count(tid) AS tournaments
 FROM Tournament;
 
 --Check if the distinct number of champions matches with total number of tournaments overall
@@ -120,9 +96,7 @@ CREATE VIEW avgwin AS
 SELECT pid, avg(wins) as avgwins 
 FROM record 
 WHERE year >= 2011 AND year <= 2014 
-GROUP BY pid 
-HAVING count(distinct pid) <= 10 
-ORDER BY avgwins DESC;
+GROUP BY pid;
 
 INSERT INTO query5
 (SELECT player.pid, pname, avgwins
@@ -156,9 +130,9 @@ WHERE year = 2014;
 
 --Check if the wins are strictly increasing. 
 CREATE VIEW IncreasingWins AS
-SELECT Wins2011.pid FROM Wins2011, Wins2012, Wins2013, Wins2014 
-WHERE Wins2011.wins < Wins2012.wins AND Wins2012.wins < Wins2013.wins AND Wins2013.wins < Wins2014.wins 
-AND Wins2011.pid = Wins2012.pid AND Wins2012.pid = Wins2013.pid AND Wins2013.pid = Wins2014.pid;
+SELECT Wins2011.pid FROM Wins2011, Wins2012, Wins2013, Wins2014
+WHERE Wins2011.pid = Wins2012.pid AND Wins2012.pid = Wins2013.pid AND Wins2013.pid = Wins2014.pid
+AND Wins2011.wins < Wins2012.wins AND Wins2012.wins < Wins2013.wins AND Wins2013.wins < Wins2014.wins;
 
 INSERT INTO query6
 (SELECT player.pid, pname
@@ -169,18 +143,16 @@ ORDER BY pname);
 DROP VIEW IF EXISTS Wins2011, Wins2012, Wins2013, Wins2014, IncreasingWins;
 
 --Query 7
---Find the players who achieved a champion at lest twice in a single year
+--Find the players who achieved a champion at least twice in a single year
 --Note that since (year, tid) is the key, if the year must be the same, tid must be different from each other.
 CREATE VIEW AtLeastTwice AS
-SELECT pid, year FROM champion c1
-WHERE EXISTS
-(SELECT * FROM champion c2
-WHERE c1.pid = c2.pid
-AND c1.year = c2.year 
-AND c1.tid <> c2.tid);
+SELECT pid, year
+FROM champion
+GROUP BY pid, year
+HAVING count(*) >= 2;
 
 INSERT INTO query7
-(SELECT distinct pname, year 
+(SELECT pname, year
 FROM player p, AtLeastTwice a 
 WHERE p.pid = a.pid 
 ORDER BY pname DESC, year DESC);
@@ -188,13 +160,13 @@ ORDER BY pname DESC, year DESC);
 DROP VIEW IF EXISTS AtLeastTwice;
 
 --Query 8
---Find all pairs of players that has played with each other
+--Find all pairs of players that has played with each other - already removes duplicates
 CREATE VIEW eachother AS
 (SELECT winid as p1, lossid as p2 FROM event) 
 UNION 
 (SELECT lossid as p1, winid as p2 FROM event);
 
---Find all pairs where both players are withn the same country
+--Find all pairs where both players are from the same country
 CREATE VIEW samecountry AS
 SELECT p1.cid, p1.pname AS p1name, p2.pname AS p2name
 FROM player p1, player p2, eachother 
@@ -216,22 +188,16 @@ FROM champion c, player p
 WHERE c.pid = p.pid 
 GROUP BY cid;
 
---Find the countries with the most number of championships
-CREATE VIEW mostchamps AS
-SELECT cid, champions FROM countrychamp c1
-WHERE NOT EXISTS
-	(SELECT * FROM countrychamp c2
-	WHERE c1.cid <> c2.cid AND c1.champions < c2.champions);
-
 INSERT INTO query9
 (SELECT cname, champions 
-FROM mostchamps m, country c 
-WHERE c.cid = m.cid 
+FROM countrychamp m, country c
+WHERE c.cid = m.cid AND m.champions = (SELECT max(champions) FROM countrychamp)
 ORDER BY cname DESC);
 
-DROP VIEW IF EXISTS countrychamp, mostchamps;
+DROP VIEW IF EXISTS countrychamp;
 
 --Query 10
+-- NOTE: NEED TO CLARIFY "in all courts"
 --Find all durations of each even from each players both winning and losing sides
 CREATE VIEW eventduration AS
 (SELECT winid AS pid, duration FROM event) 
