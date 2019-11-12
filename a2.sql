@@ -7,7 +7,7 @@ SET search_path TO A2;
 --Query 1
 --Find pname and tname of all champions where players country is same as tournamement country
 CREATE VIEW PlayerTournament AS 
-SELECT pname, tname, p.cid 
+SELECT DISTINCT p.pid, t.tid, pname, tname, p.cid 
 FROM tournament t, player p, champion c
 WHERE p.pid = c.pid AND t.tid = c.tid AND p.cid = t.cid;
 
@@ -26,13 +26,11 @@ SELECT tid, sum(capacity) AS totalCapacity
 FROM court 
 GROUP BY tid;
 
---Fidn the tournaments with the most capacity, report multiple if more than 1
+--Find the tournaments with the most capacity, report multiple if more than 1
 CREATE VIEW MaxCapacity AS 
 SELECT tid, totalCapacity 
-FROM TotalCapacity t1 
-WHERE NOT EXISTS 
-	(SELECT * FROM TotalCapacity t2 
-	WHERE t1.tid <> t2.tid AND t1.totalCapacity < t2.totalCapacity);
+FROM TotalCapacity 
+WHERE totalCapacity = (SELECT max(totalCapacity) FROM TotalCapacity);
 
 INSERT INTO query2
 (SELECT tname, totalCapacity 
@@ -49,26 +47,20 @@ CREATE VIEW eachother AS
 UNION 
 (SELECT lossid as p1id, winid as p2id FROM event);
 
---Find all the oppoents of a player and find its global ranking
-CREATE VIEW opponentglobalrank AS 
-SELECT p1id, p2id, globalrank 
+--Find all highest ranking each player met
+CREATE VIEW highrankopponent AS 
+SELECT p1id, max(globalrank) as highestrank
 FROM eachother e, player p 
-WHERE e.p2id = p.pid;
+WHERE e.p2id = p.pid
+GROUP BY p1id;
 
 --Find the highest ranking opponent for each player he/she has faced against
-CREATE VIEW highrankopponent AS
-SELECT p1id, p2id, globalrank 
-FROM opponentglobalrank o1 
-WHERE NOT EXISTS
-	(SELECT * FROM opponentglobalrank o2 
-	WHERE o1.p1id = o2.p1id 
-	AND o1.globalrank > o2.globalrank);
 
 INSERT INTO query3
-(SELECT p1id, p1.pname AS p1name, p2id, p2.pname AS p2name
+(SELECT p1id, p1.pname AS p1name, p2.pid, p2.pname AS p2name
 FROM player p1, player p2, highrankopponent
-WHERE p1id = p1.pid AND p2id = p2.pid
-ORDER BY p1name);
+WHERE p1id = p1.pid AND p2.globalrank = highestrank
+ORDER BY p1.pname);
 
 DROP VIEW IF EXISTS eachother, opponentglobalrank, highrankopponent;
 

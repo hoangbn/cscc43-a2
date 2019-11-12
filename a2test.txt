@@ -1,0 +1,3 @@
+\i ~/cscc43/a2-cscc43/a2.ddl
+\i ~/cscc43/a2-cscc43/a2insert.sql
+\i ~/cscc43/a2-cscc43/a2.sql
