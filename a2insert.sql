@@ -92,7 +92,7 @@ INSERT INTO champion VALUES
 
 INSERT INTO court VALUES
 (1, 'A1', 20, 1),
-(2, 'A2', 24, 1),
+(2, 'A2', 10, 1),
 (3, 'A3', 20, 1),
 (4, 'B1', 30, 2),
 (5, 'B2', 20, 2),
