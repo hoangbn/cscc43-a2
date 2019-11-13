@@ -197,7 +197,6 @@ ORDER BY cname DESC);
 DROP VIEW IF EXISTS countrychamp;
 
 --Query 10
--- NOTE: NEED TO CLARIFY "in all courts"
 --Find all durations of each even from each players both winning and losing sides
 CREATE VIEW eventduration AS
 (SELECT winid AS pid, duration FROM event) 

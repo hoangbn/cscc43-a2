@@ -116,9 +116,7 @@ public class Assignment2 {
             ps.setInt(2, losses);
             ps.setInt(3, pid);
             ps.setInt(4, year);
-            if (ps.executeUpdate() != 0) { // not sure if this check is supposed to be here
-                result = true;
-            }
+            result = true;
             ps.close();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -135,9 +133,7 @@ public class Assignment2 {
             ps.setInt(2, p2id);
             ps.setInt(3, p2id);
             ps.setInt(4, p1id);
-            if (ps.executeUpdate() != 0) { // also not sure if this needs to be included
-                result = true;
-            }
+            result = true;
             ps.close();
         } catch (SQLException e) {
             e.printStackTrace();
