@@ -1,6 +1,5 @@
 // REMOVE PACKAGE AND SUBMIT IN THE END
 package com.cscc43;
-import org.postgresql.util.PSQLException;
 
 import java.sql.*;
 
