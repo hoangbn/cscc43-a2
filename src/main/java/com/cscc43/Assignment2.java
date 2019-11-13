@@ -140,7 +140,7 @@ public class Assignment2 {
     public String listPlayerRanking() {
         String result = "";
         try {
-            rs = sql.executeQuery("SELECT pname, globalrank FROM player ORDER BY globalrank DESC");
+            rs = sql.executeQuery("SELECT pname, globalrank FROM player ORDER BY globalrank");
             while (rs.next()) {
                 if (!result.equals("")) {
                     result += "\n";
