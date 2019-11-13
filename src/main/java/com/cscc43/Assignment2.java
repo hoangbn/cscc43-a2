@@ -1,6 +1,3 @@
-// REMOVE PACKAGE AND SUBMIT IN THE END
-package com.cscc43;
-
 import java.sql.*;
 
 public class Assignment2 {
@@ -17,8 +14,6 @@ public class Assignment2 {
     // ResultSet for the query
     ResultSet rs;
 
-    // insert player query
-    private static final String INSERT_PLAYER = "INSERT INTO player VALUES (?, ?, ?, ?)";
     //CONSTRUCTOR
     Assignment2() throws ClassNotFoundException {
         Class.forName("org.postgresql.Driver");
@@ -115,6 +110,7 @@ public class Assignment2 {
             ps.setInt(2, losses);
             ps.setInt(3, pid);
             ps.setInt(4, year);
+            ps.executeUpdate();
             result = true;
             ps.close();
         } catch (SQLException e) {
@@ -132,6 +128,7 @@ public class Assignment2 {
             ps.setInt(2, p2id);
             ps.setInt(3, p2id);
             ps.setInt(4, p1id);
+            ps.executeUpdate();
             result = true;
             ps.close();
         } catch (SQLException e) {
