@@ -86,7 +86,8 @@ public class Assignment2 {
     public String getCourtInfo(int courtid) {
         String result = "";
         try {
-            ps = connection.prepareStatement("SELECT * FROM court WHERE courtid = ?");
+            ps = connection.prepareStatement("SELECT courtid, courtname, capacity, tname " +
+                    "FROM court, tournament WHERE court.tid = tournament.tid AND courtid = ?");
             ps.setInt(1, courtid);
             rs = ps.executeQuery();
             if (rs.next()) {
@@ -122,7 +123,7 @@ public class Assignment2 {
     public boolean deleteMatchBetween(int p1id, int p2id) {
         boolean result = false;
         try {
-            ps = connection.prepareStatement("DELETE FROM event WHERE winid = ? AND lossid = ?" +
+            ps = connection.prepareStatement("DELETE FROM event WHERE winid = ? AND lossid = ? " +
                     "OR winid = ? AND lossid = ?");
             ps.setInt(1, p1id);
             ps.setInt(2, p2id);
@@ -178,7 +179,7 @@ public class Assignment2 {
             sql.executeUpdate("CREATE TABLE championPlayers" +
                     "(pid INTEGER, pname VARCHAR, nchampions INTEGER)");
             sql.executeUpdate("INSERT INTO championPlayers " +
-                    "(SELECT p.pid, pname, count(tid)" +
+                    "(SELECT p.pid, pname, count(tid) " +
                     "FROM player p LEFT JOIN champion c " +
                     "ON p.pid = c.pid " +
                     "GROUP BY p.pid, pname " +
